@@ -20,10 +20,21 @@ class HTTPHandler(BaseHTTPRequestHandler):
                 self.send_header(header, value)
 
         self.end_headers()
-        self.wfile.write(resp.read())
+
+        while True:
+            pkt = resp.read(8192)
+
+            if len(pkt) == 0:
+                break
+
+            self.wfile.write(pkt)
 
     def do_GET(self):
         try:
+            if not self.path.startswith("/attachments"):
+                self.send_code(404)
+                return
+
             req = Request(
                 f"https://media.discordapp.net{self.path}", headers={'User-Agent': 'Mozilla'}
             )
